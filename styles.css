@@ -1,0 +1,95 @@
+/* ============================================================
+   styles.css — الأنماط المخصصة + لوحة الألوان الجديدة
+   ============================================================ */
+
+/* ---------- متغيرات الألوان (لوحة النيون) ---------- */
+:root {
+    --bg:         #0a0a14;
+    --bg-2:       #0f0f1e;
+    --card:       rgba(255, 255, 255, 0.04);
+    --border:     rgba(255, 255, 255, 0.09);
+    --text:       #eef0f7;
+    --muted:      #9a9ab5;
+    --primary:    #7c5cff;
+    --secondary:  #00d4ff;
+    --accent:     #ff3d8b;
+}
+
+/* ---------- الخطوط ---------- */
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    /* توهج خفيف في الخلفية يعطي إحساس النيون */
+    background-image:
+        radial-gradient(circle at 15% 0%, rgba(124, 92, 255, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 85% 100%, rgba(0, 212, 255, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(255, 61, 139, 0.05) 0%, transparent 60%);
+    background-attachment: fixed;
+}
+
+code, pre, .code-font {
+    font-family: 'Fira Code', monospace;
+    font-feature-settings: "liga" 1, "calt" 1;
+    letter-spacing: 0.01em;
+}
+
+/* ---------- شريط التمرير ---------- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(124, 92, 255, 0.4);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+/* ---------- تأثير ظهور النافذة المنبثقة ---------- */
+#noteModal:not(.hidden) {
+    animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* ---------- تفاعلات الأزرار ---------- */
+button, .cat-btn {
+    transition: all 0.2s ease;
+}
+button:active {
+    transform: scale(0.97);
+}
+
+/* ---------- توهج النصوص النيون ---------- */
+.neon-text {
+    text-shadow: 0 0 20px rgba(124, 92, 255, 0.5);
+}
+.neon-glow {
+    box-shadow: 0 0 30px rgba(124, 92, 255, 0.25);
+}
+
+/* ---------- ستايل الطباعة ---------- */
+@media print {
+    header, #toast, .cat-btn, button {
+        display: none !important;
+    }
+    body {
+        background: white !important;
+        color: black !important;
+        background-image: none !important;
+    }
+    .bg-panel, .bg-surface {
+        background: white !important;
+        border-color: #ccc !important;
+    }
+    code {
+        color: #000 !important;
+    }
+}
