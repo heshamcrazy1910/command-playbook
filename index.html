@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>دفتر الأوامر والتجارب السريعة | Quick Command Playbook</title>
 
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- ✅ لوحة الألوان الجديدة (Neon Palette) -->
     <script>
         tailwind.config = {
             theme: {
@@ -33,18 +31,12 @@
         }
     </script>
 
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
-
-    <!-- Custom Styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-ink text-fg min-h-screen flex flex-col">
 
-    <!-- Header -->
     <header class="border-b border-line bg-surface/70 backdrop-blur-xl sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -60,30 +52,43 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <!-- أزرار التحكم -->
+            <div class="flex items-center gap-2">
+                <!-- تصدير -->
+                <button onclick="exportNotes()" title="تصدير نسخة احتياطية" class="bg-surface hover:bg-white/10 text-fg border border-line font-semibold text-sm px-3 py-2.5 rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-download text-primary"></i>
+                    <span class="hidden sm:inline">تصدير</span>
+                </button>
+                
+                <!-- استيراد -->
+                <button onclick="triggerImport()" title="استيراد نسخة احتياطية" class="bg-surface hover:bg-white/10 text-fg border border-line font-semibold text-sm px-3 py-2.5 rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-upload text-secondary"></i>
+                    <span class="hidden sm:inline">استيراد</span>
+                </button>
+                
+                <!-- حقل مخفي لاختيار الملف -->
+                <input type="file" id="importFile" accept=".json" class="hidden" onchange="importNotes(event)">
+
+                <!-- إضافة ملاحظة -->
                 <button onclick="openModal()" class="bg-gradient-to-r from-primary to-accent hover:brightness-110 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition shadow-lg shadow-primary/40 hover:shadow-primary/60 flex items-center gap-2">
                     <i class="fa-solid fa-plus text-xs"></i>
-                    <span>إضافة ملاحظة جديدة</span>
+                    <span class="hidden sm:inline">إضافة ملاحظة جديدة</span>
+                    <span class="sm:hidden">جديد</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main -->
     <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
-
         <div class="flex flex-col md:flex-row gap-4 justify-between items-center bg-surface/50 p-4 rounded-2xl border border-line backdrop-blur-sm">
             <div class="relative w-full md:w-96">
                 <i class="fa-solid fa-magnifying-glass absolute right-3.5 top-3.5 text-muted text-sm"></i>
                 <input type="text" id="searchInput" onkeyup="filterCards()" placeholder="ابحث باسم الملاحظة، أو كود المساعد..." class="w-full bg-ink border border-line text-fg placeholder-muted/70 text-sm rounded-xl pr-10 pl-4 py-2.5 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition">
             </div>
-
-            <!-- أزرار الفلترة تُولَّد من app.js -->
             <div class="flex flex-wrap gap-2 w-full md:w-auto" id="categoryFilters"></div>
         </div>
 
         <div id="notesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-
     </main>
 
     <!-- Modal -->
@@ -129,13 +134,11 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div id="toast" class="fixed bottom-6 left-6 bg-gradient-to-l from-primary to-accent text-white px-4 py-2.5 rounded-xl shadow-xl shadow-primary/40 border border-primary/40 text-sm font-semibold flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
         <i class="fa-solid fa-check-circle"></i>
         <span id="toastMsg">تم النسخ إلى الحافظة!</span>
     </div>
 
-    <!-- تحميل الملفات -->
     <script src="categories.js"></script>
     <script src="app.js"></script>
 </body>
