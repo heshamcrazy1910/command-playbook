@@ -1,42 +1,52 @@
 /**
  * ============================================================
- *  app.js — المنطق الرئيسي للتطبيق
+ *  app.js — المنطق الرئيسي للتطبيق + ميزة الاستيراد والتصدير
  * ============================================================
  */
-
 const initialNotes = [
     {
         id: 1,
-        title: "تخطي إيميل مايكروسوفت عند تثبيت Windows 11",
+        title: "تصليح ملفات النظام التالفة التي تسبب البطئ",
         category: "Windows",
-        desc: "يُستخدم في شاشة التثبيت الأولى لتجاوز إلزامية الاتصال بالإنترنت وتسجيل الدخول.",
-        commands: ["OOBE\\BYPASSNRO"]
+        desc: "",
+        commands: ["DISM /online /cleanup-image /restorehealth"]
     },
     {
         id: 2,
-        title: "إعادة تعيين شبكة الأجهزة في Windows",
+        title: "تخطي الايميل بعد عمل النسخه",
         category: "Windows",
-        desc: "مجموعة أوامر لتنظيف الـ DNS وإعادة تعيين الـ IP عند وجود مشاكل في الاتصال.",
-        commands: ["ipconfig /flushdns", "netsh winsock reset", "ipconfig /renew"]
+        desc: "",
+        commands: ["shutdown -s -t 3600"]
     },
     {
         id: 3,
-        title: "إنشاء زيادات ذاكرة Swap سريعة (2GB) على Linux",
-        category: "Linux",
-        desc: "لزيادة استقرار السيرفر عند وجود استهلاك عالي في الـ RAM.",
+        title: "تخطي الايميل بعد عمل النسخه",
+        category: "Windows",
+        desc: "",
         commands: [
-            "sudo fallocate -l 2G /swapfile",
-            "sudo chmod 600 /swapfile",
-            "sudo mkswap /swapfile",
-            "sudo swapon /swapfile"
+            "Shift + 10",
+            "list disk",
+            "select disk 1",
+            "clean",
+            "convert gpt"
         ]
     },
     {
         id: 4,
-        title: "تنظيف وحذف الحاويات والصور غير المستخدمة في Docker",
-        category: "Docker",
-        desc: "لتفريغ مساحة الهارد المأخوذة من حاويات وصور ملغاة.",
-        commands: ["docker system prune -a --volumes -f"]
+        title: "حظر المواقع الاباحيه من الهاتف",
+        category: "General",
+        desc: "",
+        commands: ["family-filter-dns.cleanbrowsing.org"]
+    },
+    {
+        id: 5,
+        title: "تخطي الايميل بعد عمل النسخه",
+        category: "Windows",
+        desc: "",
+        commands: [
+            "Shift + 10",
+            "OOBE\\BYPASSNRO"
+        ]
     }
 ];
 
@@ -53,7 +63,80 @@ let selectedCategory = 'all';
 let editingId = null;
 
 /* ============================================================
-   توليد أزرار الفلترة + القائمة المنسدلة
+   ميزة التصدير (Export JSON)
+   ============================================================ */
+function exportNotes() {
+    const dataStr = JSON.stringify(notes, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `playbook-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('تم تصدير الملاحظات بنجاح!');
+}
+
+/* ============================================================
+   ميزة الاستيراد (Import JSON)
+   ============================================================ */
+function triggerImport() {
+    document.getElementById('importFile').click();
+}
+
+function importNotes(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (!Array.isArray(importedData)) {
+                throw new Error("الملف غير صالح");
+            }
+            
+            // التأكد من أن البيانات سليمة
+            const validData = importedData.filter(n => n.title && n.commands && Array.isArray(n.commands));
+            
+            if (validData.length === 0) {
+                throw new Error("لا توجد ملاحظات صالحة في الملف");
+            }
+
+            // سؤال المستخدم: استبدال أم دمج؟
+            const replace = confirm('هل تريد استبدال الملاحظات الحالية بالملاحظات المستوردة؟ (اضغط إلغاء للدمج)');
+            
+            if (replace) {
+                notes = validData;
+            } else {
+                // دمج الملاحظات
+                const existingIds = new Set(notes.map(n => n.id));
+                validData.forEach(n => {
+                    if (existingIds.has(n.id)) {
+                        n.id = Date.now() + Math.random(); // توليد ID جديد لو في تعارض
+                    }
+                    notes.push(n);
+                });
+            }
+
+            persist();
+            renderNotes();
+            showToast('تم استيراد الملاحظات بنجاح!');
+        } catch (err) {
+            console.error(err);
+            showToast('حدث خطأ في قراءة الملف', true);
+        } finally {
+            event.target.value = ''; // تصفير الحقل عشان تقدر تختار نفس الملف تاني
+        }
+    };
+    reader.readAsText(file);
+}
+
+/* ============================================================
+   توليد أزرار الفلترة
    ============================================================ */
 function buildCategoryUI() {
     const filters = document.getElementById('categoryFilters');
@@ -87,23 +170,18 @@ function makeCatButton(label, key, isActive) {
     return btn;
 }
 
-/* ---------- حفظ في localStorage ---------- */
 function persist() {
     try {
         localStorage.setItem('my_command_playbook', JSON.stringify(notes));
     } catch (e) {}
 }
 
-/* ---------- تعقيم النصوص ---------- */
 function escapeHTML(str) {
     return String(str == null ? '' : str).replace(/[&<>'"]/g, tag => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
     }[tag] || tag));
 }
 
-/* ============================================================
-   عرض الملاحظات
-   ============================================================ */
 function renderNotes() {
     const grid = document.getElementById('notesGrid');
     grid.innerHTML = '';
@@ -119,7 +197,7 @@ function renderNotes() {
     if (filtered.length === 0) {
         grid.innerHTML = '<div class="col-span-full text-center py-12 text-muted">'
             + '<i class="fa-regular fa-folder-open text-4xl mb-3 text-primary/40"></i>'
-            + '<p class="text-sm">لا توجد ملاحظات أو أوامر مطابقة لملفاتك</p></div>';
+            + '<p class="text-sm">لا توجد ملاحظات أو أوامر مطابقة</p></div>';
         return;
     }
 
@@ -155,9 +233,6 @@ function renderNotes() {
     });
 }
 
-/* ============================================================
-   عمليات النسخ
-   ============================================================ */
 function findNoteById(id) {
     return notes.find(n => String(n.id) === String(id));
 }
@@ -194,9 +269,6 @@ function copyToClipboard(text) {
     }
 }
 
-/* ============================================================
-   Toast
-   ============================================================ */
 function showToast(msg, isError) {
     const toast = document.getElementById('toast');
     document.getElementById('toastMsg').innerText = msg;
@@ -216,9 +288,6 @@ function showToast(msg, isError) {
     }, 2000);
 }
 
-/* ============================================================
-   الفلترة والبحث
-   ============================================================ */
 function filterCategory(cat, btn) {
     selectedCategory = cat;
     document.querySelectorAll('.cat-btn').forEach(b => {
@@ -236,9 +305,6 @@ function filterCards() {
     renderNotes();
 }
 
-/* ============================================================
-   Modal
-   ============================================================ */
 function openModal(note) {
     editingId = note ? note.id : null;
     const form = document.getElementById('addNoteForm');
@@ -271,9 +337,6 @@ function closeModal() {
     editingId = null;
 }
 
-/* ============================================================
-   حفظ / حذف
-   ============================================================ */
 function saveNote(e) {
     e.preventDefault();
 
@@ -310,9 +373,6 @@ function deleteNote(id) {
     showToast('تم الحذف بنجاح');
 }
 
-/* ============================================================
-   التشغيل
-   ============================================================ */
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('noteModal').addEventListener('click', function (e) {
         if (e.target === this) closeModal();
